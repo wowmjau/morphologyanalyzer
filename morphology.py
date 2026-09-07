@@ -74,5 +74,3 @@ for token in doc:
 print("\n" + doc.text)
 print(syntax)
 print(romanize(str(doc)))
-
-
