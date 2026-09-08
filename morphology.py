@@ -74,8 +74,7 @@ def stress(text):
     stressed_text = list(stressed_text)
     for index in range(len(stressed_text)):
         if stressed_text[index] == "+":
-            stressed_text[index - 1] = vowels.get(stressed_text[index - 1])
-            stressed_text[index] = ""
+            stressed_text[index] = "́"
     return "".join(stressed_text)
 
 def romanize(text):
