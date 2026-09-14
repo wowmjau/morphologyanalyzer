@@ -45,19 +45,6 @@ script = {
     "я": "ja",
 }
 
-vowels = {
-    "а": "а́",
-    "е": "е́",
-    "ё": "ё́",
-    "и": "и́",
-    "о": "о́",
-    "у": "у́",
-    "ы": "ы́",
-    "э": "э́",
-    "ю": "ю́",
-    "я": "я́",
-}
-
 '''
 def dictionarycheck(word):
     result = jmd.lookup(str(word))
@@ -93,9 +80,11 @@ for token in doc:
     else:
         syntax += str(token.pos_ + " ")
     print(token.pos_, end=" ")
-    print(token.morph, end=" ")
+    print(str(token.morph).split("="), end=" ")
 
-print("\n" + doc.text)
-print(syntax)
-print(stress(str(doc)))
-print(romanize(str(doc)))
+
+
+print(f"\nOriginal text: {doc.text}")
+print(f"With stress:   {stress(str(doc))}")
+print(f"Romanization:  {romanize(str(doc))}")
+print(f"Gloss:         {syntax}")
