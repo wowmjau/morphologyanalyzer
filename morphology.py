@@ -4,7 +4,7 @@ from stressrnn import StressRNN
 nlp = spacy.load("ru_core_news_sm")
 stress_rnn = StressRNN()
 
-doc = nlp("Пачка сигарет!")
+doc = nlp("Пачка сигарет! кот коту аргументирование")
 
 
 syntax = ""
@@ -45,6 +45,22 @@ script = {
     "я": "ja",
 }
 
+glossterms = {
+    # nouns
+    "Inan": "INAN",
+    "Anim": "AN",
+    "Nom": "NOM",
+    "Acc": "ACC",
+    "Gen": "GEN",
+    "Dat": "DAT",
+    "Ins": "INS",
+    "Masc": "M",
+    "Fem": "F",
+    "Neut": "N",
+    "Sing": "SG",
+    "Plur": "PL",
+}
+
 '''
 def dictionarycheck(word):
     result = jmd.lookup(str(word))
@@ -67,21 +83,28 @@ def stress(text):
 def romanize(text):
     return "".join(script.get(char, " ") for char in str(text).lower())
 
+def glossfinder(text): # put token.morph in here
+    case = ""
+    for item in str(text).split("|"):
+        case += f".{glossterms.get(item.split("=")[1])}"
+    return case
+
+
 for token in doc:
     if token.pos_ == "NOUN":
         print("ill try and translate")
         result = "meow"
-        syntax += str(result + " ")
+        syntax += str(result + glossfinder(token.morph) + " ")
     elif token.pos_ == "PRON":
         if str(token) == "私":
             syntax += "I "
     elif token.pos_ == "ADP":
-        syntax += particles.get(str(token), "idk ")
+        syntax += script.get(str(token), "idk ")
+    elif token.pos_ == "PUNCT":
+        syntax += "| "
     else:
         syntax += str(token.pos_ + " ")
     print(token.pos_, end=" ")
-    print(str(token.morph).split("="), end=" ")
-
 
 
 print(f"\nOriginal text: {doc.text}")
