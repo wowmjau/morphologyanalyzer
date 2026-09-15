@@ -1,11 +1,13 @@
 import spacy
+from translate import Translator
 from stressrnn import StressRNN
 
 nlp = spacy.load("ru_core_news_sm")
 stress_rnn = StressRNN()
 
-doc = nlp("Пачка сигарет! кот коту аргументирование")
+doc = nlp(input("Enter Russian text: "))
 
+translator = Translator(to_lang="en")
 
 syntax = ""
 
@@ -46,7 +48,7 @@ script = {
 }
 
 glossterms = {
-    # nouns
+    # case
     "Inan": "INAN",
     "Anim": "AN",
     "Nom": "NOM",
@@ -54,12 +56,24 @@ glossterms = {
     "Gen": "GEN",
     "Dat": "DAT",
     "Ins": "INS",
+    "Loc": "PREP",
+    # gender
     "Masc": "M",
     "Fem": "F",
     "Neut": "N",
+    # number
     "Sing": "SG",
     "Plur": "PL",
+    # pronoun
+    "First": "1",
+    "Second": "2",
+    "Third": "3",
+    # verb 
+    "Imp": "NPFV",
+    "Ind": "IND",
 }
+
+verbgloss = [".Ind"]
 
 '''
 def dictionarycheck(word):
@@ -86,23 +100,27 @@ def romanize(text):
 def glossfinder(text): # put token.morph in here
     case = ""
     for item in str(text).split("|"):
-        case += f".{glossterms.get(item.split("=")[1])}"
+        case += f".{glossterms.get(item.split("=")[1], f"{item.split("=")[1]}")}"
     return case
 
 
 for token in doc:
-    if token.pos_ == "NOUN":
-        print("ill try and translate")
-        result = "meow"
+    if token.pos_ in ["NOUN", "ADJ"]:
+        result = translator.translate(str(token))
         syntax += str(result + glossfinder(token.morph) + " ")
     elif token.pos_ == "PRON":
-        if str(token) == "私":
-            syntax += "I "
-    elif token.pos_ == "ADP":
-        syntax += script.get(str(token), "idk ")
+        result = glossfinder(token.morph)
+        lastindex = result.rfind(".")
+        result = result[lastindex:] + result[:lastindex:]
+        syntax += str(result[1:] + " ")
+    elif token.pos_ == "VERB":
+        result = translator.translate(str(token))
+        for gloss in verbgloss:
+            result.replace(gloss, "")
+        syntax += str(result + glossfinder(token.morph) + " ")
     elif token.pos_ == "PUNCT":
         syntax += "| "
-    else:
+    else:   
         syntax += str(token.pos_ + " ")
     print(token.pos_, end=" ")
 
@@ -111,3 +129,4 @@ print(f"\nOriginal text: {doc.text}")
 print(f"With stress:   {stress(str(doc))}")
 print(f"Romanization:  {romanize(str(doc))}")
 print(f"Gloss:         {syntax}")
+result = translator.translate(str(token))
