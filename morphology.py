@@ -71,20 +71,11 @@ glossterms = {
     # verb 
     "Imp": "NPFV",
     "Ind": "IND",
+    "Pres": "PRS",
+    "Past": "PST",
 }
 
-verbgloss = [".Ind"]
-
-'''
-def dictionarycheck(word):
-    result = jmd.lookup(str(word))
-    for entry in result.entries:
-        sense = entry.senses[0]
-        text = str(sense.glosses[0])
-        p1 = text.find("'")
-        p2 = text.find("'", p1 + 1)
-        return text[p1 + 1:p2]
-'''
+verbgloss = [".Act", ".Fin"]
 
 def stress(text):
     stressed_text = stress_rnn.put_stress(text, stress_symbol='+', accuracy_threshold=0.75, replace_similar_symbols=True)
@@ -97,27 +88,34 @@ def stress(text):
 def romanize(text):
     return "".join(script.get(char, " ") for char in str(text).lower())
 
-def glossfinder(text): # put token.morph in here
+def glossfinder(text): # put tokenmorph in here
     case = ""
-    for item in str(text).split("|"):
+    for item in text.split("|"):
         case += f".{glossterms.get(item.split("=")[1], f"{item.split("=")[1]}")}"
     return case
 
 
 for token in doc:
+    tokenmorph = str(token.morph)
     if token.pos_ in ["NOUN", "ADJ"]:
         result = translator.translate(str(token))
-        syntax += str(result + glossfinder(token.morph) + " ")
+        syntax += result + glossfinder(tokenmorph) + " "
     elif token.pos_ == "PRON":
-        result = glossfinder(token.morph)
+        result = glossfinder(tokenmorph)
         lastindex = result.rfind(".")
         result = result[lastindex:] + result[:lastindex:]
         syntax += str(result[1:] + " ")
     elif token.pos_ == "VERB":
         result = translator.translate(str(token))
+        result = result + glossfinder(tokenmorph) + " "
         for gloss in verbgloss:
-            result.replace(gloss, "")
-        syntax += str(result + glossfinder(token.morph) + " ")
+            if (not gloss == ".Act") and (not ".Part" in result):
+                result = result.replace(gloss, "")
+            else:
+                if ".Act" in result:
+                    result = result.replace(gloss, ".APRT")
+                    result = result.replace(".Part", "")
+        syntax += result
     elif token.pos_ == "PUNCT":
         syntax += "| "
     else:   
@@ -129,4 +127,4 @@ print(f"\nOriginal text: {doc.text}")
 print(f"With stress:   {stress(str(doc))}")
 print(f"Romanization:  {romanize(str(doc))}")
 print(f"Gloss:         {syntax}")
-result = translator.translate(str(token))
+print(spacy.explain("Pos"))
